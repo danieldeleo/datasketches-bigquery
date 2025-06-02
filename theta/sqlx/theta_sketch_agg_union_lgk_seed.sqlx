@@ -23,7 +23,7 @@ CREATE OR REPLACE AGGREGATE FUNCTION ${self()}(sketch BYTES, params STRUCT<lg_k 
 RETURNS BYTES
 LANGUAGE js
 OPTIONS (
-  library=["${dataform.projectConfig.vars.jsBucket}/theta.mjs"],
+  library=["${dataform.projectConfig.vars.jsBucket}/theta_sketch.mjs"],
   description = '''Creates a sketch that represents the union of the given column of sketches.
 
 Param sketch: the column of sketches. Each as BYTES.
@@ -35,7 +35,7 @@ For more information:
  - https://datasketches.apache.org/docs/Theta/ThetaSketches.html
 '''
 ) AS R"""
-import ModuleFactory from "${dataform.projectConfig.vars.jsBucket}/theta.mjs";
+import ModuleFactory from "${dataform.projectConfig.vars.jsBucket}/theta_sketch.mjs";
 var Module = await ModuleFactory();
 const default_lg_k = Number(Module.DEFAULT_LG_K);
 const default_seed = BigInt(Module.DEFAULT_SEED);
@@ -95,15 +95,27 @@ export function aggregate(state, sketch) {
 }
 
 export function serialize(state) {
-  if (state.union == null) return state; // for transition deserialize-serialize
-  ensureUnion(state);
+  if (state.union == null && state.serialized != null) return state; // for transition deserialize-serialize
   try {
-    reserveBuffer(Module.compact_theta_sketch.getMaxSerializedSizeBytes(state.lg_k));
-    var size = state.union.getResultStreamCompressed(buffer.ptr, buffer.size);
+    if (state.union != null) {
+      // for prior transition deserialize-aggregate
+      // merge aggregated and serialized state
+      if (state.serialized != null) {
+        reserveBuffer(state.serialized.length);
+        Module.HEAPU8.subarray(buffer.ptr, buffer.ptr + state.serialized.length).set(state.serialized);
+        state.union.updateWithBuffer(buffer.ptr, state.serialized.length, state.seed);
+        delete state.serialized;
+      }
+      reserveBuffer(Module.compact_theta_sketch.getMaxSerializedSizeBytes(state.lg_k));
+      var size = state.union.getResultStreamCompressed(buffer.ptr, buffer.size);
+      state.serialized = Module.HEAPU8.slice(buffer.ptr, buffer.ptr + size);
+    } else {
+      state.serialized = null;
+    }
     return {
       lg_k: state.lg_k,
       seed: state.seed,
-      serialized: Module.HEAPU8.slice(buffer.ptr, buffer.ptr + size)
+      serialized: state.serialized
     };
   } catch (e) {
     if (e.message != null) throw e;
@@ -123,14 +135,16 @@ export function deserialize(state) {
 export function merge(state, other_state) {
   reserveBuffer(Module.compact_theta_sketch.getMaxSerializedSizeBytes(state.lg_k));
   ensureUnion(state);
-  try {
-    reserveBuffer(other_state.serialized.length);
-    Module.HEAPU8.subarray(buffer.ptr, buffer.ptr + other_state.serialized.length).set(other_state.serialized);
-    state.union.updateWithBuffer(buffer.ptr, other_state.serialized.length, other_state.seed);
-    delete other_state.serialized;
-  } catch (e) {
-    if (e.message != null) throw e;
-    throw new Error(Module.getExceptionMessage(e));
+  if (other_state.serialized != null) {
+    try {
+      reserveBuffer(other_state.serialized.length);
+      Module.HEAPU8.subarray(buffer.ptr, buffer.ptr + other_state.serialized.length).set(other_state.serialized);
+      state.union.updateWithBuffer(buffer.ptr, other_state.serialized.length, other_state.seed);
+      delete other_state.serialized;
+    } catch (e) {
+      if (e.message != null) throw e;
+      throw new Error(Module.getExceptionMessage(e));
+    }
   }
 }
 

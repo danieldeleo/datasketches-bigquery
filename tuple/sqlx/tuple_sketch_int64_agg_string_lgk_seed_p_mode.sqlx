@@ -24,10 +24,10 @@ RETURNS BYTES
 LANGUAGE js
 OPTIONS (
   library=["${dataform.projectConfig.vars.jsBucket}/tuple_sketch_int64.mjs"],
-  description = '''Builds a Tuple Sketch from an STRING Key column and an INT64 value column.
+  description = '''Builds a Tuple Sketch from a STRING Key column and an INT64 value column.
 Multiple values for the same key are aggregated using one of the selectable operations: SUM, MIN, MAX, ONE.
 Note that cardinality estimation accuracy, plots, error tables, and sampling probability p are the same as the Theta Sketch.
-This function only applies to Tuple Sketches with an STRING Key column and an INT64 summary column.
+This function only applies to Tuple Sketches with a STRING Key column and an INT64 summary column.
 
 Param key: the STRING key column of identifiers. This may not be NULL.
 Param value: the INT64 value column associated with each key. This may not be NULL.
@@ -71,30 +71,32 @@ export function aggregate(state, key, value) {
 }
 
 export function serialize(state) {
-  if (state.sketch == null && state.union == null) return state; // for transition deserialize-serialize
+  if (state.sketch == null && state.union == null && state.serialized != null) return state; // for transition deserialize-serialize
   try {
     // for prior transition deserialize-aggregate
     // merge aggregated and serialized state
-    if (state.sketch != null) {
-      if (state.serialized != null) {
-        var u = null;
-        try {
-          u = new Module.tuple_union_int64(state.lg_k, state.seed, state.mode);
-          u.updateWithUpdateSketch(state.sketch);
-          u.updateWithBytes(state.serialized, state.seed);
-          state.serialized = u.getResultAsUint8Array();
-        } finally {
-          if (u != null) u.delete();
-        }
-      } else {
-        state.serialized = state.sketch.serializeAsUint8Array();
+    if (state.sketch != null && state.serialized != null) {
+      var u = null;
+      try {
+        u = new Module.tuple_union_int64(state.lg_k, state.seed, state.mode);
+        u.updateWithUpdateSketch(state.sketch);
+        u.updateWithBytes(state.serialized, state.seed);
+        state.serialized = u.getResultAsUint8Array();
+      } finally {
+        if (u != null) u.delete();
       }
-      state.sketch.delete()
+      state.sketch.delete();
       delete state.sketch;
     } else if (state.union != null) {
       state.serialized = state.union.getResultAsUint8Array();
       state.union.delete();
       delete state.union;
+    } else if (state.sketch != null) {
+      state.serialized = state.sketch.serializeAsUint8Array();
+      state.sketch.delete();
+      delete state.sketch;
+    } else {
+      state.serialized = null;
     }
     return state;
   } catch (e) {

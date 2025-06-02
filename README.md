@@ -39,6 +39,7 @@ page for how to contact us.
 ## Requirements
 
 - Requires [Emscripten (emcc compiler)](https://emscripten.org/)
+
   ```bash
   git clone https://github.com/emscripten-core/emsdk.git \
   && cd emsdk \
@@ -47,25 +48,33 @@ page for how to contact us.
   && source ./emsdk_env.sh \
   && cd ..
   ```
+
+  This can be installed using 'brew install emscripten' on MacOS.
+
 - Requires a link to **datasketches-cpp** in this repository
+
   ```bash
-  # Run the following if you've already cloned this repo
-  git submodule update --init --recursive
+  make datasketches-cpp
   ```
-  ```bash
-  # Otherwise clone this repo with --recursive flag
-  git clone --recursive https://github.com/apache/datasketches-bigquery.git
-  ```
+
+  This target is a part of the default target 'all'.
+  This requires wget and unzip.
+
 - Requires make utility
 - Requires [Google Cloud CLI](https://cloud.google.com/sdk/docs/install)
+
   ```bash
   curl https://sdk.cloud.google.com | bash 
   ```
+
 - Requires npm and @dataform/cli package
+
   ```bash
   npm install -g @dataform/cli
   ```
+
 - Requires setting the following environment variables to your own values:
+
   ```bash
   export JS_BUCKET=    # GCS bucket to hold compiled artifacts (must include gs://)
   export BQ_PROJECT=   # location of stored SQL functions (routines)
@@ -81,6 +90,7 @@ page for how to contact us.
 
 Run the following steps in this repo's root directory to install everything via
 Cloud Build:
+
 ```bash
 gcloud builds submit \ 
   --project=$BQ_PROJECT \
@@ -95,22 +105,27 @@ gcloud builds submit \
 ### Install All DataSketches
 
 Run the following steps in this repo's root directory to install everything:
+
 ```bash
 gcloud auth application-default login # for authentication
-make          # performs compilation
-make install  # upload to $JS_BUCKET & create functions in $BQ_PROJECT.$BQ_DATASET
-make test     # runs predefined tests in BQ
+make          # compile C++ code and produce .js, .mjs and .wasm artifacts
+make install  # upload artifacts to $JS_BUCKET and create SQLX functions in $BQ_PROJECT.$BQ_DATASET
+make test     # run tests in BigQuery
 ```
+
+The "install" target consists of "upload" and "create", which can be used separately if desired
 
 ### Install Specific DataSketches
 
-To install a specific sketch, change into an individual sketch directory and run
-the following:
+To install a specific sketch use targets of the form dir.target
+For example, to install Theta sketch only:
+
 ```bash
 gcloud auth application-default login # for authentication
-make          # performs compilation
-make install  # upload to $JS_BUCKET 
-make create   # create functions in $BQ_PROJECT.$BQ_DATASET
+make theta          # compile C++ code and produce .js, .mjs and .wasm artifacts
+make theta.install  # upload artifacts to $JS_BUCKET and create SQLX functions in $BQ_PROJECT.$BQ_DATASET
 ```
+
+Currently there is no way to run tests for a specific sketch only. "make example" can be used in an individual sketch directory.
 
 </details>

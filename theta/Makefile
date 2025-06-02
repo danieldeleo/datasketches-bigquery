@@ -24,9 +24,10 @@ EMCFLAGS=-I../datasketches-cpp/common/include \
 	-sENVIRONMENT=shell \
 	-sTOTAL_MEMORY=1024MB \
 	-O3 \
-	--bind
+	--bind \
+	-sEXPORTED_RUNTIME_METHODS=[HEAPU8]
 
-ARTIFACTS=theta.mjs theta.js theta.wasm
+ARTIFACTS=theta_sketch.mjs theta_sketch.js theta_sketch.wasm
 
 all: $(ARTIFACTS)
 
@@ -55,7 +56,7 @@ reverse = $(if $(wordlist 2,2,$(1)),$(call reverse,$(wordlist 2,$(words $(1)),$(
 create:
 	cd .. && dataform run --tags "theta"
 
-install: upload
+install: upload create
 
 example:
 	@for file in $(wildcard test/*sql); do \

@@ -76,14 +76,18 @@ export function aggregate(state, sketch) {
 }
 
 export function serialize(state) {
-  if (state.union == null) return state; // for transition deserialize-serialize
+  if (state.union == null && state.serialized != null) return state; // for transition deserialize-serialize
   try {
-    if (state.serialized != null) {
-      state.union.updateWithBytes(state.serialized, state.seed);
+    if (state.union != null) {
+      if (state.serialized != null) {
+        state.union.updateWithBytes(state.serialized, state.seed);
+      }
+      state.serialized = state.union.getResultAsUint8Array();
+      state.union.delete();
+      delete state.union;
+    } else {
+      state.serialized = null;
     }
-    state.serialized = state.union.getResultAsUint8Array();
-    state.union.delete();
-    delete state.union;
     return state;
   } catch (e) {
     if (e.message != null) throw e;

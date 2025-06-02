@@ -23,7 +23,7 @@ CREATE OR REPLACE FUNCTION ${self()}(sketchA BYTES, sketchB BYTES, seed INT64)
 RETURNS BYTES
 LANGUAGE js
 OPTIONS (
-  library=["${dataform.projectConfig.vars.jsBucket}/theta.js"],
+  library=["${dataform.projectConfig.vars.jsBucket}/theta_sketch.js"],
   js_parameter_encoding_mode='STANDARD',
   description = '''Computes a sketch that represents the scalar intersection of the two given sketches.
 
@@ -36,6 +36,7 @@ For more information:
  - https://datasketches.apache.org/docs/Theta/ThetaSketches.html
 '''
 ) AS R"""
+if (sketchA == null || sketchB == null) return null;
 const default_seed = BigInt(Module.DEFAULT_SEED);
 try {
   return Module.thetaIntersectionCompressed(sketchA, sketchB, seed ? BigInt(seed) : default_seed);

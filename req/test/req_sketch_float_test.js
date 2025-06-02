@@ -18,6 +18,18 @@
 
 const { generate_udf_test, generate_udaf_test } = unit_test_utils;
 
+generate_udaf_test("req_sketch_float_build", {
+  input_columns: [`value`],
+  input_rows: `SELECT * FROM UNNEST([NULL, NULL, NULL, NULL, NULL]) AS value`,
+  expected_output: null
+});
+
+generate_udaf_test("req_sketch_float_merge", {
+  input_columns: [`sketch`],
+  input_rows: `SELECT * FROM UNNEST([CAST(NULL AS BYTES), CAST(NULL AS BYTES), CAST(NULL AS BYTES)]) AS sketch`,
+  expected_output: null
+});
+
 const req_1 = `FROM_BASE64('AgERCAwAAQAAAAAAAAAAAAAAQEEAAwAACgAAAAAAIEEAABBBAAAAQQAA4EAAAMBAAACgQAAAgEAAAEBAAAAAQAAAgD8=')`;
 
 generate_udaf_test("req_sketch_float_build", {
@@ -43,6 +55,11 @@ generate_udaf_test("req_sketch_float_merge", {
 });
 
 generate_udf_test("req_sketch_float_to_string", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("req_sketch_float_to_string", [{
   inputs: [ req_3 ],
   expected_output: `'''### REQ sketch summary:
    K              : 12
@@ -61,8 +78,18 @@ generate_udf_test("req_sketch_float_to_string", [{
 }]);
 
 generate_udf_test("req_sketch_float_get_rank", [{
+  inputs: [ `CAST(NULL AS BYTES)`, 10, true ],
+  expected_output: null
+}]);
+
+generate_udf_test("req_sketch_float_get_rank", [{
   inputs: [ req_3, 10, true ],
   expected_output: 0.5
+}]);
+
+generate_udf_test("req_sketch_float_get_quantile", [{
+  inputs: [ `CAST(NULL AS BYTES)`, 0.5, true ],
+  expected_output: null
 }]);
 
 generate_udf_test("req_sketch_float_get_quantile", [{
@@ -71,8 +98,18 @@ generate_udf_test("req_sketch_float_get_quantile", [{
 }]);
 
 generate_udf_test("req_sketch_float_get_min_value", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("req_sketch_float_get_min_value", [{
   inputs: [ req_3 ],
   expected_output: 1
+}]);
+
+generate_udf_test("req_sketch_float_get_max_value", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
 }]);
 
 generate_udf_test("req_sketch_float_get_max_value", [{
@@ -81,8 +118,18 @@ generate_udf_test("req_sketch_float_get_max_value", [{
 }]);
 
 generate_udf_test("req_sketch_float_get_n", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("req_sketch_float_get_n", [{
   inputs: [ req_3 ],
   expected_output: 20
+}]);
+
+generate_udf_test("req_sketch_float_get_num_retained", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
 }]);
 
 generate_udf_test("req_sketch_float_get_num_retained", [{
@@ -91,8 +138,18 @@ generate_udf_test("req_sketch_float_get_num_retained", [{
 }]);
 
 generate_udf_test("req_sketch_float_get_pmf", [{
+  inputs: [ `CAST(NULL AS BYTES)`, `[10.0]`, true ],
+  expected_output: `[]`
+}]);
+
+generate_udf_test("req_sketch_float_get_pmf", [{
   inputs: [ req_3, `[10.0]`, true ],
   expected_output: `[0.5, 0.5]`
+}]);
+
+generate_udf_test("req_sketch_float_get_cdf", [{
+  inputs: [ `CAST(NULL AS BYTES)`, `[10.0]`, true ],
+  expected_output: `[]`
 }]);
 
 generate_udf_test("req_sketch_float_get_cdf", [{
@@ -103,6 +160,16 @@ generate_udf_test("req_sketch_float_get_cdf", [{
 generate_udf_test("req_sketch_float_get_rank_lower_bound", [{
   inputs: [ req_3, 0.95, 2 ],
   expected_output: 0.95
+}]);
+
+generate_udf_test("req_sketch_float_get_rank_lower_bound", [{
+  inputs: [ `CAST(NULL AS BYTES)`, 0.95, 2 ],
+  expected_output: null
+}]);
+
+generate_udf_test("req_sketch_float_get_rank_upper_bound", [{
+  inputs: [ `CAST(NULL AS BYTES)`, 0.95, 2 ],
+  expected_output: null
 }]);
 
 generate_udf_test("req_sketch_float_get_rank_upper_bound", [{

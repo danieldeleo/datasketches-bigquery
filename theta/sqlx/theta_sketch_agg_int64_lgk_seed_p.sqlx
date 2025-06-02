@@ -23,7 +23,7 @@ CREATE OR REPLACE AGGREGATE FUNCTION ${self()}(value INT64, params STRUCT<lg_k B
 RETURNS BYTES 
 LANGUAGE js
 OPTIONS (
-  library=["${dataform.projectConfig.vars.jsBucket}/theta.mjs"],
+  library=["${dataform.projectConfig.vars.jsBucket}/theta_sketch.mjs"],
   description = '''Creates a sketch that represents the cardinality of the given INT64 column.
 
 Param value: the INT64 column of identifiers.
@@ -36,7 +36,7 @@ For more information:
  - https://datasketches.apache.org/docs/Theta/ThetaSketches.html
  '''
 ) AS R"""
-import ModuleFactory from "${dataform.projectConfig.vars.jsBucket}/theta.mjs";
+import ModuleFactory from "${dataform.projectConfig.vars.jsBucket}/theta_sketch.mjs";
 var Module = await ModuleFactory();
 const default_lg_k = Number(Module.DEFAULT_LG_K);
 const default_seed = BigInt(Module.DEFAULT_SEED);
@@ -65,12 +65,11 @@ export function aggregate(state, value) {
 }
 
 export function serialize(state) {
-  if (state.sketch == null && state.union == null) return state; // for transition deserialize-serialize
+  if (state.sketch == null && state.union == null && state.serialized != null) return state; // for transition deserialize-serialize
   try {
     // for prior transition deserialize-aggregate
     // merge aggregated and serialized state
-    if (state.sketch != null) {
-      if (state.serialized != null) {
+    if (state.sketch != null && state.serialized != null) {
         var u = null;
         try {
           u = new Module.theta_union(state.lg_k, state.seed);
@@ -80,18 +79,22 @@ export function serialize(state) {
         } finally {
           if (u != null) u.delete();
         }
-      } else {
-        state.serialized = state.sketch.serializeAsUint8ArrayCompressed();
-      }
       state.sketch.delete();
       delete state.sketch;
     } else if (state.union != null) {
       state.serialized = state.union.getResultAsUint8ArrayCompressed();
       state.union.delete();
       delete state.union;
+    } else if (state.sketch != null) {
+      state.serialized = state.sketch.serializeAsUint8ArrayCompressed();
+      state.sketch.delete();
+      delete state.sketch;
+    } else {
+      state.serialized = null;
     }
     return state;
   } catch (e) {
+    if (e.message != null) throw e;
     throw new Error(Module.getExceptionMessage(e));
   } finally {
     if (state.sketch != null) state.sketch.delete();

@@ -18,6 +18,18 @@
 
 const { generate_udf_test, generate_udaf_test } = unit_test_utils;
 
+generate_udaf_test("tdigest_double_build", {
+  input_columns: [`value`],
+  input_rows: `SELECT * FROM UNNEST([NULL, NULL, NULL, NULL, NULL]) AS value`,
+  expected_output: null
+});
+
+generate_udaf_test("tdigest_double_merge", {
+  input_columns: [`sketch`],
+  input_rows: `SELECT * FROM UNNEST([CAST(NULL AS BYTES), CAST(NULL AS BYTES), CAST(NULL AS BYTES)]) AS sketch`,
+  expected_output: null
+});
+
 const td_1 = `FROM_BASE64('AgEUyAAEAAAKAAAAAAAAAAAAAAAAAPA/AAAAAAAAJEAAAAAAAADwPwEAAAAAAAAAAAAAAAAAAEABAAAAAAAAAAAAAAAAAAhAAQAAAAAAAAAAAAAAAAAQQAEAAAAAAAAAAAAAAAAAFEABAAAAAAAAAAAAAAAAABhAAQAAAAAAAAAAAAAAAAAcQAEAAAAAAAAAAAAAAAAAIEABAAAAAAAAAAAAAAAAACJAAQAAAAAAAAAAAAAAAAAkQAEAAAAAAAAA')`;
 
 generate_udaf_test("tdigest_double_build", {
@@ -43,6 +55,11 @@ generate_udaf_test("tdigest_double_merge", {
 });
 
 generate_udf_test("tdigest_double_to_string", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("tdigest_double_to_string", [{
   inputs: [ td_3 ],
   expected_output: `'''### t-Digest summary:
    Nominal k          : 200
@@ -60,8 +77,18 @@ generate_udf_test("tdigest_double_to_string", [{
 }]);
 
 generate_udf_test("tdigest_double_get_rank", [{
+  inputs: [ `CAST(NULL AS BYTES)`, 10 ],
+  expected_output: null
+}]);
+
+generate_udf_test("tdigest_double_get_rank", [{
   inputs: [ td_3, 10 ],
   expected_output: 0.475
+}]);
+
+generate_udf_test("tdigest_double_get_quantile", [{
+  inputs: [ `CAST(NULL AS BYTES)`, 0.5 ],
+  expected_output: null
 }]);
 
 generate_udf_test("tdigest_double_get_quantile", [{
@@ -70,13 +97,28 @@ generate_udf_test("tdigest_double_get_quantile", [{
 }]);
 
 generate_udf_test("tdigest_double_get_min_value", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("tdigest_double_get_min_value", [{
   inputs: [ td_3 ],
   expected_output: 1
 }]);
 
 generate_udf_test("tdigest_double_get_max_value", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("tdigest_double_get_max_value", [{
   inputs: [ td_3 ],
   expected_output: 20
+}]);
+
+generate_udf_test("tdigest_double_get_total_weight", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
 }]);
 
 generate_udf_test("tdigest_double_get_total_weight", [{

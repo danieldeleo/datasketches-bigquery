@@ -20,10 +20,18 @@ MODULES := theta tuple cpc hll kll fi tdigest req
 $(MODULES):
 	$(MAKE) -C $@
 
-.PHONY: all clean init $(MODULES)
+.PHONY: all clean init test unittest readme $(MODULES)
 .DEFAULT_GOAL := all
 
-all: $(MODULES)
+all: datasketches-cpp $(MODULES)
+
+DATASKETCHES_CPP_VERSION = 5.2.0
+datasketches-cpp:
+	wget https://github.com/apache/datasketches-cpp/archive/refs/tags/$(DATASKETCHES_CPP_VERSION).zip
+	mv $(DATASKETCHES_CPP_VERSION).zip datasketches-cpp-$(DATASKETCHES_CPP_VERSION).zip
+	unzip datasketches-cpp-$(DATASKETCHES_CPP_VERSION).zip
+	rm datasketches-cpp-$(DATASKETCHES_CPP_VERSION).zip
+	ln -s datasketches-cpp-$(DATASKETCHES_CPP_VERSION) datasketches-cpp
 
 MODCLEAN = $(addsuffix .clean, $(MODULES))
 
@@ -36,26 +44,42 @@ clean: $(MODCLEAN)
 	$(RM) -r definitions
 	$(RM) -r includes
 
-init:
+init: workflow_settings.yaml
+
+workflow_settings.yaml:
 	(cd cicd && ./init_dataform.sh)
+
+MODUPLOAD = $(addsuffix .upload, $(MODULES))
+
+$(MODUPLOAD): %.upload:
+	$(MAKE) -C $* upload
+
+upload: $(MODUPLOAD)
+
+MODCREATE = $(addsuffix .create, $(MODULES))
+
+$(MODCREATE): %.create: init
+	$(MAKE) -C $* create
+
+create: init
+	dataform run --tags "udfs"
 
 MODINSTALL = $(addsuffix .install, $(MODULES))
 
-$(MODINSTALL): %.install:
+$(MODINSTALL): %.install: init
 	$(MAKE) -C $* install
 
-install: init $(MODINSTALL)
-	dataform run --tags "udfs"
+install: upload create
 
 MODTEST = $(addsuffix .test, $(MODULES))
 
 $(MODTEST): %.test:
 	- $(MAKE) -C $* test
 
-unittest:
+test: init
 	dataform test
-
-test: $(MODTEST) unittest
 
 readme:
 	python3 readme_generator.py
+
+.PHONY: all clean init install upload create

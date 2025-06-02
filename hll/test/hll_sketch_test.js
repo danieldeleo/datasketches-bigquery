@@ -20,6 +20,24 @@ const { generate_udf_test, generate_udaf_test } = unit_test_utils;
 
 // using defaults
 
+generate_udaf_test("hll_sketch_agg_string", {
+  input_columns: [`str`],
+  input_rows: `SELECT * FROM UNNEST([CAST(NULL AS STRING), CAST(NULL AS STRING), CAST(NULL AS STRING)]) AS str`,
+  expected_output: null
+});
+
+generate_udaf_test("hll_sketch_agg_int64", {
+  input_columns: [`value`],
+  input_rows: `SELECT * FROM UNNEST([NULL, NULL, NULL]) AS value`,
+  expected_output: null
+});
+
+generate_udaf_test("hll_sketch_agg_union", {
+  input_columns: [`sketch`],
+  input_rows: `SELECT * FROM UNNEST([CAST(NULL AS BYTES), CAST(NULL AS BYTES), CAST(NULL AS BYTES)]) AS sketch`,
+  expected_output: null
+});
+
 const hll_1 = `FROM_BASE64('AgEHDAMIAwAvgjsECv+ABG8Z3AY=')`;
 
 generate_udaf_test("hll_sketch_agg_string", {
@@ -36,6 +54,21 @@ generate_udaf_test("hll_sketch_agg_string", {
   expected_output: hll_2
 });
 
+generate_udf_test("hll_sketch_union", [{
+  inputs: [ `CAST(NULL AS BYTES)`, `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("hll_sketch_union", [{
+  inputs: [ hll_1, `CAST(NULL AS BYTES)` ],
+  expected_output: hll_1
+}]);
+
+generate_udf_test("hll_sketch_union", [{
+  inputs: [ `CAST(NULL AS BYTES)`, hll_2 ],
+  expected_output: hll_2
+}]);
+
 const hll_union_1 = `FROM_BASE64('AgEHDAMIBQAvgjsECv+ABG8Z3AbAv2oSnXrQCw==')`;
 
 generate_udf_test("hll_sketch_union", [{
@@ -44,8 +77,18 @@ generate_udf_test("hll_sketch_union", [{
 }]);
 
 generate_udf_test("hll_sketch_get_estimate", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("hll_sketch_get_estimate", [{
   inputs: [ hll_union_1 ],
   expected_output: 5.000000049670538
+}]);
+
+generate_udf_test("hll_sketch_to_string", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
 }]);
 
 generate_udf_test("hll_sketch_to_string", [{
@@ -86,6 +129,11 @@ generate_udaf_test("hll_sketch_agg_union", {
   input_rows: `SELECT * FROM UNNEST([${hll_3}, ${hll_4}]) AS sketch`,
   expected_output: hll_union_2
 });
+
+generate_udf_test("hll_sketch_get_estimate_and_bounds", [{
+  inputs: [ `CAST(NULL AS BYTES)`, 3 ],
+  expected_output: null
+}]);
 
 generate_udf_test("hll_sketch_get_estimate_and_bounds", [{
   inputs: [ hll_union_2, 3 ],

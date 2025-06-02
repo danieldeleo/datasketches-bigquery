@@ -20,6 +20,24 @@ const { generate_udf_test, generate_udaf_test } = unit_test_utils;
 
 // using defaults
 
+generate_udaf_test("cpc_sketch_agg_string", {
+  input_columns: [`str`],
+  input_rows: `SELECT * FROM UNNEST([CAST(NULL AS STRING), CAST(NULL AS STRING), CAST(NULL AS STRING)]) AS str`,
+  expected_output: null
+});
+
+generate_udaf_test("cpc_sketch_agg_int64", {
+  input_columns: [`value`],
+  input_rows: `SELECT * FROM UNNEST([NULL, NULL, NULL]) AS value`,
+  expected_output: null
+});
+
+generate_udaf_test("cpc_sketch_agg_union", {
+  input_columns: [`sketch`],
+  input_rows: `SELECT * FROM UNNEST([CAST(NULL AS BYTES), CAST(NULL AS BYTES), CAST(NULL AS BYTES)]) AS sketch`,
+  expected_output: null
+});
+
 const cpc_1 = `FROM_BASE64('CAEQCwAOzJMDAAAAAgAAAAAAAAAA+p9AiIAEKIABCEC+FRhuAwAAAA==')`;
 
 generate_udaf_test("cpc_sketch_agg_string", {
@@ -36,6 +54,27 @@ generate_udaf_test("cpc_sketch_agg_string", {
   expected_output: cpc_2
 });
 
+generate_udf_test("cpc_sketch_union", [{
+  inputs: [ `CAST(NULL AS BYTES)`, `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+// this one is slightly different form cpc_1: merged is true, KXP and HIP are invalid
+const cpc_1_merged = `FROM_BASE64('BAEQCwAKzJMDAAAAAgAAAL4VGG4DAAAA')`;
+
+generate_udf_test("cpc_sketch_union", [{
+  inputs: [ cpc_1, `CAST(NULL AS BYTES)` ],
+  expected_output: cpc_1_merged
+}]);
+
+// this one is slightly different form cpc_2: merged is true, KXP and HIP are invalid
+const cpc_2_merged = `FROM_BASE64('BAEQCwAKzJMDAAAAAgAAAL6ty+NIAAAA')`;
+
+generate_udf_test("cpc_sketch_union", [{
+  inputs: [ `CAST(NULL AS BYTES)`, cpc_2 ],
+  expected_output: cpc_2_merged
+}]);
+
 const cpc_union_1 = `FROM_BASE64('BAEQCwAKzJMFAAAAAgAAAHwTuG5g27UF')`;
 
 generate_udf_test("cpc_sketch_union", [{
@@ -44,8 +83,18 @@ generate_udf_test("cpc_sketch_union", [{
 }]);
 
 generate_udf_test("cpc_sketch_get_estimate", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("cpc_sketch_get_estimate", [{
   inputs: [ cpc_union_1 ],
   expected_output: 5.00162840932184
+}]);
+
+generate_udf_test("cpc_sketch_to_string", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
 }]);
 
 generate_udf_test("cpc_sketch_to_string", [{
@@ -86,6 +135,11 @@ generate_udaf_test("cpc_sketch_agg_union", {
   input_rows: `SELECT * FROM UNNEST([${cpc_3}, ${cpc_4}]) AS sketch`,
   expected_output: cpc_union_2
 });
+
+generate_udf_test("cpc_sketch_get_estimate_and_bounds", [{
+  inputs: [ `CAST(NULL AS BYTES)`, 3 ],
+  expected_output: null
+}]);
 
 generate_udf_test("cpc_sketch_get_estimate_and_bounds", [{
   inputs: [ cpc_union_2, 3 ],

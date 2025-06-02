@@ -23,18 +23,19 @@ CREATE OR REPLACE FUNCTION ${self()}(sketch BYTES, seed INT64)
 RETURNS FLOAT64
 LANGUAGE js
 OPTIONS (
-  library=["${dataform.projectConfig.vars.jsBucket}/theta.js"],
+  library=["${dataform.projectConfig.vars.jsBucket}/theta_sketch.js"],
   js_parameter_encoding_mode='STANDARD',
-  description = '''Gets cardinality estimate and bounds from given sketch.
+  description = '''Gets distinct count estimate from a given sketch.
   
 Param sketch: The given sketch to query as BYTES.
 Param seed: This is used to confirm that the given sketch was configured with the correct seed.
-Returns: a FLOAT64 value as the cardinality estimate.
+Returns: distinct count estimate as FLOA64.
 
 For more information:
  - https://datasketches.apache.org/docs/Theta/ThetaSketches.html
 '''
 ) AS R"""
+if (sketch == null) return null;
 const default_seed = BigInt(Module.DEFAULT_SEED);
 try {
   return Module.compact_theta_sketch.getEstimateFromBytes(sketch, seed ? BigInt(seed) : default_seed);

@@ -20,6 +20,24 @@ const { generate_udf_test, generate_udaf_test } = unit_test_utils;
 
 // using defaults
 
+generate_udaf_test("tuple_sketch_int64_agg_string", {
+  input_columns: [`str`, `1`],
+  input_rows: `SELECT * FROM UNNEST([CAST(NULL AS STRING), CAST(NULL AS STRING), CAST(NULL AS STRING)]) AS str`,
+  expected_output: null
+});
+
+generate_udaf_test("tuple_sketch_int64_agg_int64", {
+  input_columns: [`value`, `1`],
+  input_rows: `SELECT * FROM UNNEST([NULL, NULL, NULL]) AS value`,
+  expected_output: null
+});
+
+generate_udaf_test("tuple_sketch_int64_agg_union", {
+  input_columns: [`sketch`],
+  input_rows: `SELECT * FROM UNNEST([CAST(NULL AS BYTES), CAST(NULL AS BYTES), CAST(NULL AS BYTES)]) AS sketch`,
+  expected_output: null
+});
+
 const tuple_1 = `FROM_BASE64('AgMJAQAazJMDAAAAAAAAALcMbuWor0AIAQAAAAAAAACFf0C2icflNAEAAAAAAAAAF8EdUoUHAXsBAAAAAAAAAA==')`;
 
 generate_udaf_test("tuple_sketch_int64_agg_string", {
@@ -36,6 +54,21 @@ generate_udaf_test("tuple_sketch_int64_agg_string", {
   expected_output: tuple_2
 });
 
+generate_udf_test("tuple_sketch_int64_union", [{
+  inputs: [ `CAST(NULL AS BYTES)`, `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("tuple_sketch_int64_union", [{
+  inputs: [ tuple_1, `CAST(NULL AS BYTES)` ],
+  expected_output: tuple_1
+}]);
+
+generate_udf_test("tuple_sketch_int64_union", [{
+  inputs: [ `CAST(NULL AS BYTES)`, tuple_2 ],
+  expected_output: tuple_2
+}]);
+
 const tuple_union_1 = `FROM_BASE64('AgMJAQAazJMFAAAAAAAAALcMbuWor0AIAgAAAAAAAABOPehbCCvBLgEAAAAAAAAAhX9AtonH5TQBAAAAAAAAAOBfNe11HQBzAQAAAAAAAAAXwR1ShQcBewEAAAAAAAAA')`;
 
 generate_udf_test("tuple_sketch_int64_union", [{
@@ -44,8 +77,18 @@ generate_udf_test("tuple_sketch_int64_union", [{
 }]);
 
 generate_udf_test("tuple_sketch_int64_get_estimate", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("tuple_sketch_int64_get_estimate", [{
   inputs: [ tuple_union_1 ],
   expected_output: 5
+}]);
+
+generate_udf_test("tuple_sketch_int64_to_string", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
 }]);
 
 generate_udf_test("tuple_sketch_int64_to_string", [{
@@ -65,6 +108,21 @@ generate_udf_test("tuple_sketch_int64_to_string", [{
 '''`
 }]);
 
+generate_udf_test("tuple_sketch_int64_intersection", [{
+  inputs: [ `CAST(NULL AS BYTES)`, `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("tuple_sketch_int64_intersection", [{
+  inputs: [ tuple_1, `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("tuple_sketch_int64_intersection", [{
+  inputs: [ `CAST(NULL AS BYTES)`, tuple_2 ],
+  expected_output: null
+}]);
+
 const tuple_intersection = `FROM_BASE64('AQMJAQAazJO3DG7lqK9ACAIAAAAAAAAA')`;
 
 generate_udf_test("tuple_sketch_int64_intersection", [{
@@ -77,6 +135,21 @@ generate_udf_test("tuple_sketch_int64_get_estimate", [{
   expected_output: 1
 }]);
 
+generate_udf_test("tuple_sketch_int64_a_not_b", [{
+  inputs: [ `CAST(NULL AS BYTES)`, `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("tuple_sketch_int64_a_not_b", [{
+  inputs: [ `CAST(NULL AS BYTES)`, tuple_2 ],
+  expected_output: null
+}]);
+
+generate_udf_test("tuple_sketch_int64_a_not_b", [{
+  inputs: [ tuple_1, `CAST(NULL AS BYTES)` ],
+  expected_output: tuple_1
+}]);
+
 const tuple_a_not_b = `FROM_BASE64('AgMJAQAazJMCAAAAAAAAAIV/QLaJx+U0AQAAAAAAAAAXwR1ShQcBewEAAAAAAAAA')`;
 
 generate_udf_test("tuple_sketch_int64_a_not_b", [{
@@ -87,6 +160,21 @@ generate_udf_test("tuple_sketch_int64_a_not_b", [{
 generate_udf_test("tuple_sketch_int64_get_estimate", [{
   inputs: [ tuple_a_not_b ],
   expected_output: 2
+}]);
+
+generate_udf_test("tuple_sketch_int64_jaccard_similarity", [{
+  inputs: [ `CAST(NULL AS BYTES)`, `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("tuple_sketch_int64_jaccard_similarity", [{
+  inputs: [ tuple_1, `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("tuple_sketch_int64_jaccard_similarity", [{
+  inputs: [ `CAST(NULL AS BYTES)`, tuple_2 ],
+  expected_output: null
 }]);
 
 generate_udf_test("tuple_sketch_int64_jaccard_similarity", [{
@@ -119,8 +207,18 @@ generate_udaf_test("tuple_sketch_int64_agg_union", {
 });
 
 generate_udf_test("tuple_sketch_int64_get_estimate_and_bounds", [{
+  inputs: [ `CAST(NULL AS BYTES)`, 3 ],
+  expected_output: null
+}]);
+
+generate_udf_test("tuple_sketch_int64_get_estimate_and_bounds", [{
   inputs: [ tuple_union_2, 3 ],
   expected_output: `STRUCT(5 AS estimate, 5 AS lower_bound, 5 AS upper_bound)`
+}]);
+
+generate_udf_test("tuple_sketch_int64_get_theta", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
 }]);
 
 generate_udf_test("tuple_sketch_int64_get_theta", [{
@@ -129,8 +227,18 @@ generate_udf_test("tuple_sketch_int64_get_theta", [{
 }]);
 
 generate_udf_test("tuple_sketch_int64_get_num_retained", [{
+  inputs: [ `CAST(NULL AS BYTES)` ],
+  expected_output: null
+}]);
+
+generate_udf_test("tuple_sketch_int64_get_num_retained", [{
   inputs: [ tuple_union_2 ],
   expected_output: 5
+}]);
+
+generate_udf_test("tuple_sketch_int64_from_theta_sketch", [{
+  inputs: [ `CAST(NULL AS BYTES)`, 1 ],
+  expected_output: null
 }]);
 
 generate_udf_test("tuple_sketch_int64_from_theta_sketch", [{
@@ -139,8 +247,18 @@ generate_udf_test("tuple_sketch_int64_from_theta_sketch", [{
 }]);
 
 generate_udf_test("tuple_sketch_int64_get_sum_estimate_and_bounds", [{
+  inputs: [ `CAST(NULL AS BYTES)`, 2 ],
+  expected_output: null
+}]);
+
+generate_udf_test("tuple_sketch_int64_get_sum_estimate_and_bounds", [{
   inputs: [ tuple_union_2, 2 ],
   expected_output: `STRUCT(6 AS sum_estimate, 6 AS sum_lower_bound, 6 AS sum_upper_bound)`
+}]);
+
+generate_udf_test("tuple_sketch_int64_filter_low_high", [{
+  inputs: [ `CAST(NULL AS BYTES)`, 1, 1 ],
+  expected_output: null
 }]);
 
 generate_udf_test("tuple_sketch_int64_filter_low_high", [{
