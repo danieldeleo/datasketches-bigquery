@@ -15,7 +15,6 @@ steps:
       ./emsdk activate latest
       source ./emsdk_env.sh
       cd ..
-      git submodule update --init --recursive
       make
       make install
       make test
